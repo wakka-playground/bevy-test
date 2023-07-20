@@ -16,13 +16,9 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ghcr.io/wakka-playground/bevy-test:main
     steps:
     - uses: actions/checkout@v3
-    - name: install trunk
-      run: cargo install --locked trunk
-    - name: rustup wasm32 target
-      run: rustup target add wasm32-unknown-unknown
     - name: Build
       run: trunk build
     - name: Setup Pages
