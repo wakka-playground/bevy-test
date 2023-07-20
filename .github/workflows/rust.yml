@@ -6,7 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
-permissions: write-all
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,7 +25,13 @@ jobs:
       run: rustup target add wasm32-unknown-unknown
     - name: Build
       run: trunk build
-    - name: Deploy
-      uses: JamesIves/github-pages-deploy-action@v4
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
       with:
-        folder: dist
+        # Upload entire repository
+        path: 'dist/.'
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
