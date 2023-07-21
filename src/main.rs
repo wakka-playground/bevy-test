@@ -1,17 +1,31 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use rand::Rng;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_startup_system(setup_graphics)
-        .add_startup_system(setup_physics)
-        .add_system(print_ball_altitude)
+        .add_plugins((DefaultPlugins,
+		      RapierPhysicsPlugin::<NoUserData>::default(),
+		      RapierDebugRenderPlugin::default()))
+        .add_systems(Startup, (setup_graphics, setup_physics))
+    // .add_system(print_ball_altitude)
+        .add_systems(Update, button_pressed) 
         .run();
 }
-
+fn button_pressed(mut commands: Commands, mouse_button: Res<Input<MouseButton>>) {
+    
+    if mouse_button.pressed(MouseButton::Left) {
+	let mut rng = rand::thread_rng();
+	commands
+            .spawn(RigidBody::Dynamic)
+            .insert(Collider::ball(0.5))
+            .insert(Restitution::coefficient(0.7))
+            .insert(TransformBundle::from(
+		Transform::from_xyz(rng.gen_range(-2.0..2.0),
+				    5.0,
+				    rng.gen_range(-2.0..2.0))));
+    }
+}
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands.spawn(Camera3dBundle {
