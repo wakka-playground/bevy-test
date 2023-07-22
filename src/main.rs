@@ -9,21 +9,44 @@ fn main() {
 		      RapierDebugRenderPlugin::default()))
         .add_systems(Startup, (setup_graphics, setup_physics))
     // .add_system(print_ball_altitude)
-        .add_systems(Update, button_pressed) 
+        .add_systems(Update, (button_pressed, touch_pressed)) 
         .run();
 }
+
+fn drop_ball(commands: &mut Commands) {
+    let mut rng = rand::thread_rng();
+    commands
+	.spawn(RigidBody::Dynamic)
+	.insert(Collider::ball(0.5))
+	.insert(Restitution::coefficient(0.7))
+	.insert(TransformBundle::from(
+	    Transform::from_xyz(rng.gen_range(-2.0..2.0),
+				5.0,
+				rng.gen_range(-2.0..2.0))));
+}
+
+fn touch_pressed(mut commands: Commands, touches: Res<Touches>) {
+
+    for finger in touches.iter() {
+        if touches.just_pressed(finger.id()) {
+	    drop_ball(&mut commands);
+            println!("A new touch with ID {} just began.", finger.id());
+        }
+        println!(
+            "Finger {} is at position ({},{}), started from ({},{}).",
+            finger.id(),
+            finger.position().x,
+            finger.position().y,
+            finger.start_position().x,
+            finger.start_position().y,
+        );
+    }
+}
+
 fn button_pressed(mut commands: Commands, mouse_button: Res<Input<MouseButton>>) {
-    
+
     if mouse_button.pressed(MouseButton::Left) {
-	let mut rng = rand::thread_rng();
-	commands
-            .spawn(RigidBody::Dynamic)
-            .insert(Collider::ball(0.5))
-            .insert(Restitution::coefficient(0.7))
-            .insert(TransformBundle::from(
-		Transform::from_xyz(rng.gen_range(-2.0..2.0),
-				    5.0,
-				    rng.gen_range(-2.0..2.0))));
+	drop_ball(&mut commands);
     }
 }
 fn setup_graphics(mut commands: Commands) {
@@ -46,10 +69,4 @@ fn setup_physics(mut commands: Commands) {
         .insert(Collider::ball(0.5))
         .insert(Restitution::coefficient(0.7))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)));
-}
-
-fn print_ball_altitude(positions: Query<&Transform, With<RigidBody>>) {
-    for transform in positions.iter() {
-        println!("Ball altitude: {}", transform.translation.y);
-    }
 }
